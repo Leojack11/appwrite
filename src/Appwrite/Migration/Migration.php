@@ -77,6 +77,9 @@ abstract class Migration
         Authorization::disable();
         Authorization::setDefaultStatus(false);
 
+        $config = Config::getParam('collections', []);
+        $collections = array_merge($config['console'], $config['projects'], $config['buckets'], $config['databases']);
+
         $this->collections = array_merge([
             '_metadata' => [
                 '$id' => ID::custom('_metadata'),
@@ -90,7 +93,7 @@ abstract class Migration
                 '$id' => ID::custom('abuse'),
                 '$collection' => Database::METADATA
             ]
-        ], Config::getParam('collections', []));
+        ], $collections);
     }
 
     /**
@@ -286,7 +289,7 @@ abstract class Migration
     public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId, string $from = null): void
     {
         $from ??= $collectionId;
-        $collection = Config::getParam('collections', [])[$from] ?? null;
+        $collection = $this->collections[$from] ?? null;
         if (is_null($collection)) {
             throw new Exception("Collection {$collectionId} not found");
         }
@@ -332,7 +335,7 @@ abstract class Migration
     public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
     {
         $from ??= $collectionId;
-        $collection = Config::getParam('collections', [])[$collectionId] ?? null;
+        $collection = $this->collections[$from] ?? null;
 
         if (is_null($collection)) {
             throw new Exception("Collection {$collectionId} not found");
